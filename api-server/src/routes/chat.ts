@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import OpenAI from 'openai';
+import Groq from 'groq-sdk';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -13,16 +13,21 @@ const limiter = rateLimit({
   message: { error: 'Zu viele Anfragen. Bitte warte eine Minute.' },
 });
 
-let client: OpenAI | null = null;
+let client: Groq | null = null;
 
-function getClient(): OpenAI {
+function getClient(): Groq {
   if (!client) {
-    const apiKey = process.env['AI_INTEGRATIONS_GROQ_API_KEY'];
-    if (!apiKey) throw new Error('AI_INTEGRATIONS_GROQ_API_KEY is not set');
-    client = new OpenAI({
-      apiKey,
-      baseURL: 'https://api.groq.com/openai/v1',
-    });
+    // Support multiple common env key names
+    const apiKey =
+      process.env['GROQ_API_KEY'] ??
+      process.env['AI_INTEGRATIONS_GROQ_API_KEY'] ??
+      process.env['GROQ_KEY'];
+    if (!apiKey) {
+      throw new Error(
+        'Groq API key not set. Add GROQ_API_KEY to your .env file.',
+      );
+    }
+    client = new Groq({ apiKey });
   }
   return client;
 }
@@ -33,7 +38,7 @@ konkrete, wissenschaftlich fundierte Trainingsempfehlungen. Antworte immer auf D
 präzise und motivierend. Beziehe dich auf die Metriken des Athleten wenn möglich.`;
 
 router.post('/', limiter, async (req: Request, res: Response) => {
-  const { prompt } = req.body as { prompt?: string };
+  const { prompt, context } = req.body as { prompt?: string; context?: string };
 
   if (!prompt || typeof prompt !== 'string') {
     res.status(400).json({ error: 'prompt is required' });
@@ -42,19 +47,31 @@ router.post('/', limiter, async (req: Request, res: Response) => {
 
   try {
     const groq = getClient();
+
+    const userMessage = context
+      ? `Kontext (aktuelle Metriken):\n${context}\n\nFrage: ${prompt}`
+      : prompt;
+
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
-      max_tokens: 8192,
+      max_tokens: 1024,
+      temperature: 0.7,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: prompt },
+        { role: 'user', content: userMessage },
       ],
     });
+
     const content = completion.choices[0]?.message?.content ?? '';
     res.json({ content });
-  } catch (error) {
-    req.log.error({ error }, 'Chat route error');
-    res.status(500).json({ error: 'KI-Service vorübergehend nicht verfügbar.' });
+  } catch (error: unknown) {
+    console.error('[chat route]', error);
+    const message =
+      error instanceof Error ? error.message : 'Unbekannter Fehler';
+    res.status(500).json({
+      error: 'KI-Service vorübergehend nicht verfügbar.',
+      detail: process.env['NODE_ENV'] !== 'production' ? message : undefined,
+    });
   }
 });
 
