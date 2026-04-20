@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Findus Coach",
+    "slug": "findus-coach",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "findus",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "de.findus.coach"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "de.findus.coach"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-blur",
+      "expo-symbols"
+    ]
+  }
+}

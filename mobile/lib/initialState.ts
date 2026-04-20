@@ -1,0 +1,26 @@
+export const initialState = {
+  intervalsCredentials: null,
+  analytics: {
+    dailyStats: [],
+    hrv: { current: { value: 0, status: '' }, history: [] },
+    vo2Max: { value: 0, status: '' },
+    restingHR: { value: 0, status: '' },
+    trainingReadiness: { value: 0, status: '' },
+    bodyBattery: { value: 0, status: '' },
+    stressLevel: { value: 0, status: '' },
+    trainingStatus: { value: '' },
+    weeklyRecovery: { value: 0 },
+    acuteLoad: { value: 0 },
+    chronicLoad: { value: 0 },
+    loadRatio: { value: 0, status: '' },
+    weeklyStrain: { value: 0 },
+    sleepScore: { value: 0, status: '' },
+    sleepStages: {
+      deep: { value: 0 },
+      rem: { value: 0 },
+      light: { value: 0 },
+      awake: { value: 0 },
+    },
+    intervals: null,
+  },
+};
